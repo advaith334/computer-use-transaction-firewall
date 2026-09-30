@@ -1,0 +1,7 @@
+# Observ policies: one plain-language rule per line.
+# Compile with:  observ compile   (templates first; Claude for anything else)
+Never submit a payment over $5,000 without human approval
+Never change a vendor's bank details
+Never email anyone outside acme.com
+The admin console needs human approval
+Block any payment or bank change that doesn't match an on-screen action

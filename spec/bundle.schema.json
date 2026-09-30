@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Observ policy bundle",
+  "type": "object",
+  "required": [
+    "version",
+    "schema_version",
+    "min_confidence",
+    "rules",
+    "hash",
+    "signature"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "min_confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "effect",
+          "when"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "description": "the plain-language policy line"
+          },
+          "effect": {
+            "enum": [
+              "block",
+              "hold",
+              "allow"
+            ]
+          },
+          "when": {
+            "$ref": "#/$defs/condition"
+          },
+          "mode": {
+            "enum": [
+              "enforce",
+              "shadow"
+            ]
+          },
+          "on_unknown": {
+            "enum": [
+              "block",
+              "hold",
+              "allow"
+            ]
+          },
+          "sensors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "tests": {
+      "type": "array"
+    },
+    "policies": {
+      "type": "array"
+    },
+    "hash": {
+      "type": "string",
+      "description": "sha256 of canonical {schema_version,min_confidence,rules}"
+    },
+    "signature": {
+      "type": "string",
+      "description": "HMAC-SHA256 of hash (OBSERV_SIGNING_KEY)"
+    }
+  },
+  "$defs": {
+    "condition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "all"
+          ],
+          "properties": {
+            "all": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/condition"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "any"
+          ],
+          "properties": {
+            "any": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/condition"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "not"
+          ],
+          "properties": {
+            "not": {
+              "$ref": "#/$defs/condition"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "fact",
+            "op"
+          ],
+          "properties": {
+            "fact": {
+              "type": "string"
+            },
+            "op": {
+              "enum": [
+                "eq",
+                "neq",
+                "gt",
+                "gte",
+                "lt",
+                "lte",
+                "in",
+                "not_in",
+                "glob",
+                "not_glob",
+                "ends_with",
+                "not_ends_with",
+                "exists"
+              ]
+            },
+            "value": {}
+          }
+        }
+      ]
+    }
+  }
+}

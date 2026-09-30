@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "facts": {
+    "sensor": {
+      "type": "enum",
+      "values": [
+        "extension",
+        "harness",
+        "egress",
+        "cdp",
+        "desktop",
+        "platform"
+      ],
+      "doc": "Which sensor observed the action."
+    },
+    "verb": {
+      "type": "enum",
+      "values": [
+        "click",
+        "type",
+        "key",
+        "submit",
+        "navigate",
+        "request"
+      ],
+      "doc": "The raw interaction."
+    },
+    "semantic_action": {
+      "type": "enum",
+      "values": [
+        "payment",
+        "payee_change",
+        "email_send",
+        "delete",
+        "login",
+        "navigation",
+        "none",
+        "unknown"
+      ],
+      "doc": "What the action does in business terms."
+    },
+    "amount": {
+      "type": "number",
+      "doc": "Monetary amount the action commits, if any."
+    },
+    "currency": {
+      "type": "string",
+      "doc": "ISO currency code of amount."
+    },
+    "payee": {
+      "type": "string",
+      "doc": "Payee / vendor / beneficiary name."
+    },
+    "recipient_domain": {
+      "type": "string",
+      "doc": "Domain of an email recipient."
+    },
+    "url": {
+      "type": "string",
+      "doc": "Full URL where the action happens."
+    },
+    "host": {
+      "type": "string",
+      "doc": "Host (and port) of the URL."
+    },
+    "path": {
+      "type": "string",
+      "doc": "URL path."
+    },
+    "element_label": {
+      "type": "string",
+      "doc": "Accessible label of the target element."
+    },
+    "element_role": {
+      "type": "string",
+      "doc": "Accessible role of the target element."
+    },
+    "ui_intent": {
+      "type": "enum",
+      "values": [
+        "matched",
+        "none",
+        "mismatch"
+      ],
+      "doc": "Egress only: did a visible UI action precede this committing request?"
+    }
+  },
+  "ops": {
+    "eq": "equals",
+    "neq": "not equal",
+    "gt": "greater than",
+    "gte": "greater than or equal",
+    "lt": "less than",
+    "lte": "less than or equal",
+    "in": "one of",
+    "not_in": "none of",
+    "glob": "matches glob pattern (* wildcard, case-insensitive)",
+    "not_glob": "does not match glob pattern",
+    "ends_with": "ends with (case-insensitive)",
+    "not_ends_with": "does not end with (case-insensitive)",
+    "exists": "fact is known (value is true/false)"
+  },
+  "semantic_actions": [
+    "payment",
+    "payee_change",
+    "email_send",
+    "delete",
+    "login",
+    "navigation",
+    "none",
+    "unknown"
+  ],
+  "commit_actions": [
+    "payment",
+    "payee_change",
+    "email_send",
+    "delete",
+    "unknown"
+  ],
+  "effects": [
+    "block",
+    "hold",
+    "allow"
+  ]
+}

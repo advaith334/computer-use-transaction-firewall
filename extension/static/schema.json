@@ -1,0 +1,6 @@
+{
+  "type": "object",
+  "properties": {
+    "observd_url": { "type": "string", "description": "Base URL of observd, e.g. http://127.0.0.1:7777" }
+  }
+}

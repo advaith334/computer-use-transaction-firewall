@@ -1,0 +1,33 @@
+# Observ sandbox image: what a fleet operator bakes into every agent VM/container.
+#   - Chromium with the Observ extension FORCE-INSTALLED by enterprise policy (no flags)
+#   - observd, the egress commit proxy and the demo agents
+# Build:  docker build -f docker/Dockerfile.sandbox -t observ-sandbox .
+# Run:    docker run --rm observ-sandbox            (runs examples/demo.py inside)
+
+# ---- 1. build, test and pack the extension ------------------------------------------
+FROM node:24-bookworm-slim AS ext
+WORKDIR /src
+COPY extension/package.json extension/package-lock.json extension/
+RUN cd extension && npm ci --ignore-scripts=false
+COPY observ/assets/snapshot.js observ/assets/snapshot.js
+COPY conformance/vectors.json conformance/vectors.json
+COPY extension extension
+RUN cd extension && npm run build && npm test
+# A fresh signing key per image build; the extension ID derives from it.
+RUN mkdir /out && cd extension && npx --yes crx3@2 -p /out/key.pem -o /out/observ.crx -x /out/updates.xml \
+      --crxURL http://127.0.0.1:7700/observ.crx -- dist
+
+# ---- 2. the sandbox ------------------------------------------------------------------
+FROM mcr.microsoft.com/playwright/python:v1.63.0-noble
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv PYTHONPATH=/app PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
+    OBSERV_EXTENSION_MODE=policy
+WORKDIR /app
+COPY pyproject.toml uv.lock README.md ./
+RUN mkdir observ && touch observ/__init__.py && uv sync --frozen --all-extras --no-install-project
+COPY . .
+RUN uv sync --frozen --all-extras
+COPY --from=ext /src/extension/dist extension/dist
+COPY --from=ext /out /opt/observ/ext
+RUN uv run --frozen python docker/write_policy.py /opt/observ/ext/updates.xml
+ENTRYPOINT ["/app/docker/entrypoint.sh"]
