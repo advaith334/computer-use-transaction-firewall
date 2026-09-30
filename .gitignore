@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.observ/
+.demo/
+.scratch/
+bundle.json
+observ.config.json
+extension/node_modules/
+extension/dist/
+.DS_Store
