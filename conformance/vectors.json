@@ -1,0 +1,1207 @@
+{
+ "bundle": {
+  "version": 1,
+  "schema_version": 1,
+  "min_confidence": 0.8,
+  "rules": [
+   {
+    "id": "p1",
+    "source": "Never submit a payment over $5,000 without human approval",
+    "effect": "hold",
+    "when": {
+     "all": [
+      {
+       "fact": "semantic_action",
+       "op": "eq",
+       "value": "payment"
+      },
+      {
+       "fact": "amount",
+       "op": "gt",
+       "value": 5000
+      }
+     ]
+    },
+    "mode": "enforce",
+    "on_unknown": "hold"
+   },
+   {
+    "id": "p2",
+    "source": "Never change a vendor's bank details",
+    "effect": "block",
+    "when": {
+     "all": [
+      {
+       "fact": "semantic_action",
+       "op": "eq",
+       "value": "payee_change"
+      }
+     ]
+    },
+    "mode": "enforce",
+    "on_unknown": "hold"
+   },
+   {
+    "id": "p3",
+    "source": "Never email anyone outside acme.com",
+    "effect": "block",
+    "when": {
+     "all": [
+      {
+       "fact": "semantic_action",
+       "op": "eq",
+       "value": "email_send"
+      },
+      {
+       "fact": "recipient_domain",
+       "op": "neq",
+       "value": "acme.com"
+      },
+      {
+       "fact": "recipient_domain",
+       "op": "not_ends_with",
+       "value": ".acme.com"
+      }
+     ]
+    },
+    "mode": "enforce",
+    "on_unknown": "hold"
+   },
+   {
+    "id": "p4",
+    "source": "The admin console needs human approval",
+    "effect": "hold",
+    "when": {
+     "all": [
+      {
+       "fact": "semantic_action",
+       "op": "in",
+       "value": [
+        "payment",
+        "payee_change",
+        "email_send",
+        "delete",
+        "unknown"
+       ]
+      },
+      {
+       "fact": "url",
+       "op": "glob",
+       "value": "*/admin/*"
+      }
+     ]
+    },
+    "mode": "enforce",
+    "on_unknown": "hold"
+   },
+   {
+    "id": "p5",
+    "source": "Block any payment or bank change that doesn't match an on-screen action",
+    "effect": "block",
+    "when": {
+     "all": [
+      {
+       "fact": "semantic_action",
+       "op": "in",
+       "value": [
+        "payment",
+        "payee_change"
+       ]
+      },
+      {
+       "fact": "ui_intent",
+       "op": "in",
+       "value": [
+        "none",
+        "mismatch"
+       ]
+      }
+     ]
+    },
+    "mode": "enforce",
+    "on_unknown": "hold",
+    "sensors": [
+     "egress"
+    ]
+   },
+   {
+    "id": "x1",
+    "source": "shadow: deletes anywhere",
+    "effect": "block",
+    "mode": "shadow",
+    "on_unknown": "allow",
+    "when": {
+     "all": [
+      {
+       "fact": "semantic_action",
+       "op": "eq",
+       "value": "delete"
+      }
+     ]
+    }
+   },
+   {
+    "id": "x2",
+    "source": "harness may not navigate off-site",
+    "effect": "block",
+    "mode": "enforce",
+    "on_unknown": "allow",
+    "sensors": [
+     "harness"
+    ],
+    "when": {
+     "all": [
+      {
+       "fact": "verb",
+       "op": "eq",
+       "value": "navigate"
+      },
+      {
+       "fact": "host",
+       "op": "not_in",
+       "value": [
+        "127.0.0.1:8765",
+        "portal:8000"
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "id": "x3",
+    "source": "hold logins to *.corp.example",
+    "effect": "hold",
+    "mode": "enforce",
+    "on_unknown": "allow",
+    "when": {
+     "any": [
+      {
+       "all": [
+        {
+         "fact": "semantic_action",
+         "op": "eq",
+         "value": "login"
+        },
+        {
+         "fact": "host",
+         "op": "glob",
+         "value": "*.corp.example"
+        }
+       ]
+      },
+      {
+       "not": {
+        "fact": "element_label",
+        "op": "exists"
+       }
+      }
+     ]
+    }
+   }
+  ],
+  "tests": [],
+  "policies": [
+   {
+    "line": "Never submit a payment over $5,000 without human approval",
+    "rule_id": "p1",
+    "status": "ok"
+   },
+   {
+    "line": "Never change a vendor's bank details",
+    "rule_id": "p2",
+    "status": "ok"
+   },
+   {
+    "line": "Never email anyone outside acme.com",
+    "rule_id": "p3",
+    "status": "ok"
+   },
+   {
+    "line": "The admin console needs human approval",
+    "rule_id": "p4",
+    "status": "ok"
+   },
+   {
+    "line": "Block any payment or bank change that doesn't match an on-screen action",
+    "rule_id": "p5",
+    "status": "ok"
+   }
+  ],
+  "hash": "6c015878d76b56bd0a86a968450d6e590069d077558623d4e9a7006ca2b18ec6",
+  "signature": "a406c7a1672621de1bc36c21e0d476ef3a5e2bb4e583c64e0243c82f935e1277"
+ },
+ "vectors": [
+  {
+   "name": "pay 7200 USD",
+   "snapshot": {
+    "url": "http://127.0.0.1:8765/invoices/INV-1042",
+    "event": "submit",
+    "key": null,
+    "element": {
+     "tag": "button",
+     "type": "submit",
+     "role": "button",
+     "label": "Pay invoice",
+     "text": "Pay invoice",
+     "name": ""
+    },
+    "form": {
+     "action": "/pay",
+     "method": "post",
+     "submit_label": "Pay invoice",
+     "fields": [
+      {
+       "name": "payee",
+       "label": "Payee",
+       "type": "select-one",
+       "value": "Acme Supplies Ltd"
+      },
+      {
+       "name": "amount",
+       "label": "Amount (USD)",
+       "type": "text",
+       "value": "$7,200.00"
+      },
+      {
+       "name": "memo",
+       "label": "Memo",
+       "type": "text",
+       "value": "INV-1042"
+      }
+     ]
+    }
+   },
+   "expect_facts": {
+    "sensor": "extension",
+    "verb": "submit",
+    "url": "http://127.0.0.1:8765/invoices/INV-1042",
+    "host": "127.0.0.1:8765",
+    "path": "/invoices/INV-1042",
+    "element_label": "Pay invoice",
+    "element_role": "button",
+    "semantic_action": "payment",
+    "amount": 7200,
+    "currency": "USD",
+    "payee": "Acme Supplies Ltd"
+   },
+   "expect": {
+    "decision": "hold",
+    "reason": "p1: Never submit a payment over $5,000 without human approval",
+    "rule_ids": [
+     "p1"
+    ],
+    "shadow": []
+   }
+  },
+  {
+   "name": "pay 200",
+   "snapshot": {
+    "url": "http://127.0.0.1:8765/invoices/INV-1043",
+    "event": "submit",
+    "key": null,
+    "element": {
+     "tag": "button",
+     "type": "submit",
+     "role": "button",
+     "label": "Pay invoice",
+     "text": "Pay invoice",
+     "name": ""
+    },
+    "form": {
+     "action": "/pay",
+     "method": "post",
+     "submit_label": "Pay invoice",
+     "fields": [
+      {
+       "name": "payee",
+       "label": "Payee",
+       "type": "text",
+       "value": "Globex Corp"
+      },
+      {
+       "name": "amount",
+       "label": "Amount",
+       "type": "text",
+       "value": "200"
+      }
+     ]
+    }
+   },
+   "expect_facts": {
+    "sensor": "extension",
+    "verb": "submit",
+    "url": "http://127.0.0.1:8765/invoices/INV-1043",
+    "host": "127.0.0.1:8765",
+    "path": "/invoices/INV-1043",
+    "element_label": "Pay invoice",
+    "element_role": "button",
+    "semantic_action": "payment",
+    "amount": 200,
+    "payee": "Globex Corp"
+   },
+   "expect": {
+    "decision": "allow",
+    "reason": "no policy matched",
+    "rule_ids": [],
+    "shadow": []
+   }
+  },
+  {
+   "name": "pay 5000.50 eur",
+   "snapshot": {
+    "url": "http://127.0.0.1:8765/pay",
+    "event": "submit",
+    "key": null,
+    "element": {
+     "tag": "button",
+     "type": "submit",
+     "role": "button",
+     "label": "Send",
+     "text": "Send",
+     "name": ""
+    },
+    "form": {
+     "action": "/pay",
+     "method": "post",
+     "submit_label": "Send",
+     "fields": [
+      {
+       "name": "vendor",
+       "label": "Vendor",
+       "type": "text",
+       "value": "Initech"
+      },
+      {
+       "name": "total",
+       "label": "Total EUR",
+       "type": "text",
+       "value": "5000.50"
+      }
+     ]
+    }
+   },
+   "expect_facts": {
+    "sensor": "extension",
+    "verb": "submit",
+    "url": "http://127.0.0.1:8765/pay",
+    "host": "127.0.0.1:8765",
+    "path": "/pay",
+    "element_label": "Send",
+    "element_role": "button",
+    "semantic_action": "payment",
+    "amount": 5000.5,
+    "currency": "EUR",
+    "payee": "Initech"
+   },
+   "expect": {
+    "decision": "hold",
+    "reason": "p1: Never submit a payment over $5,000 without human approval",
+    "rule_ids": [
+     "p1"
+    ],
+    "shadow": []
+   }
+  },
+  {
+   "name": "bank change",
+   "snapshot": {
+    "url": "http://127.0.0.1:8765/vendors/acme/bank",
+    "event": "submit",
+    "key": null,
+    "element": {
+     "tag": "button",
+     "type": "submit",
+     "role": "button",
+     "label": "Save bank details",
+     "text": "Save bank details",
+     "name": ""
+    },
+    "form": {
+     "action": "/vendors/acme/bank",
+     "method": "post",
+     "submit_label": "Save bank details",
+     "fields": [
+      {
+       "name": "vendor",
+       "label": "Vendor",
+       "type": "text",
+       "value": "Acme Supplies Ltd"
+      },
+      {
+       "name": "routing",
+       "label": "Routing number",
+       "type": "text",
+       "value": "021000021"
+      },
+      {
+       "name": "account",
+       "label": "Account number",
+       "type": "text",
+       "value": "99887766"
+      }
+     ]
+    }
+   },
+   "expect_facts": {
+    "sensor": "extension",
+    "verb": "submit",
+    "url": "http://127.0.0.1:8765/vendors/acme/bank",
+    "host": "127.0.0.1:8765",
+    "path": "/vendors/acme/bank",
+    "element_label": "Save bank details",
+    "element_role": "button",
+    "semantic_action": "payee_change",
+    "payee": "Acme Supplies Ltd"
+   },
+   "expect": {
+    "decision": "block",
+    "reason": "p2: Never change a vendor's bank details",
+    "rule_ids": [
+     "p2"
+    ],
+    "shadow": []
+   }
+  },
+  {
+   "name": "email external",
+   "snapshot": {
+    "url": "http://127.0.0.1:8765/mail/compose",
+    "event": "submit",
+    "key": null,
+    "element": {
+     "tag": "button",
+     "type": "submit",
+     "role": "button",
+     "label": "Send",
+     "text": "Send",
+     "name": ""
+    },
+    "form": {
+     "action": "/mail/send",
+     "method": "post",
+     "submit_label": "Send",
+     "fields": [
+      {
+       "name": "to",
+       "label": "To",
+       "type": "text",
+       "value": "cfo@evil-corp.com"
+      },
+      {
+       "name": "subject",
+       "label": "Subject",
+       "type": "text",
+       "value": "Invoices"
+      }
+     ]
+    }
+   },
+   "expect_facts": {
+    "sensor": "extension",
+    "verb": "submit",
+    "url": "http://127.0.0.1:8765/mail/compose",
+    "host": "127.0.0.1:8765",
+    "path": "/mail/compose",
+    "element_label": "Send",
+    "element_role": "button",
+    "semantic_action": "email_send",
+    "recipient_domain": "evil-corp.com"
+   },
+   "expect": {
+    "decision": "block",
+    "reason": "p3: Never email anyone outside acme.com",
+    "rule_ids": [
+     "p3"
+    ],
+    "shadow": []
+   }
+  },
+  {
+   "name": "email internal",
+   "snapshot": {
+    "url": "http://127.0.0.1:8765/mail/compose",
+    "event": "submit",
+    "key": null,
+    "element": {
+     "tag": "button",
+     "type": "submit",
+     "role": "button",
+     "label": "Send",
+     "text": "Send",
+     "name": ""
+    },
+    "form": {
+     "action": "/mail/send",
+     "method": "post",
+     "submit_label": "Send",
+     "fields": [
+      {
+       "name": "to",
+       "label": "To",
+       "type": "text",
+       "value": "ap@acme.com"
+      },
+      {
+       "name": "subject",
+       "label": "Subject",
+       "type": "text",
+       "value": "Hi"
+      }
+     ]
+    }
+   },
+   "expect_facts": {
+    "sensor": "extension",
+    "verb": "submit",
+    "url": "http://127.0.0.1:8765/mail/compose",
+    "host": "127.0.0.1:8765",
+    "path": "/mail/compose",
+    "element_label": "Send",
+    "element_role": "button",
+    "semantic_action": "email_send",
+    "recipient_domain": "acme.com"
+   },
+   "expect": {
+    "decision": "allow",
+    "reason": "no policy matched",
+    "rule_ids": [],
+    "shadow": []
+   }
+  },
+  {
+   "name": "email subdomain",
+   "snapshot": {
+    "url": "http://127.0.0.1:8765/mail/compose",
+    "event": "submit",
+    "key": null,
+    "element": {
+     "tag": "button",
+     "type": "submit",
+     "role": "button",
+     "label": "Send",
+     "text": "Send",
+     "name": ""
+    },
+    "form": {
+     "action": "/mail/send",
+     "method": "post",
+     "submit_label": "Send",
+     "fields": [
+      {
+       "name": "to",
+       "label": "To",
+       "type": "text",
+       "value": "ap@eu.acme.com"
+      }
+     ]
+    }
+   },
+   "expect_facts": {
+    "sensor": "extension",
+    "verb": "submit",
+    "url": "http://127.0.0.1:8765/mail/compose",
+    "host": "127.0.0.1:8765",
+    "path": "/mail/compose",
+    "element_label": "Send",
+    "element_role": "button",
+    "semantic_action": "email_send",
+    "recipient_domain": "eu.acme.com"
+   },
+   "expect": {
+    "decision": "allow",
+    "reason": "no policy matched",
+    "rule_ids": [],
+    "shadow": []
+   }
+  },
+  {
+   "name": "email mixed recipients",
+   "snapshot": {
+    "url": "http://127.0.0.1:8765/mail/compose",
+    "event": "submit",
+    "key": null,
+    "element": {
+     "tag": "button",
+     "type": "submit",
+     "role": "button",
+     "label": "Send",
+     "text": "Send",
+     "name": ""
+    },
+    "form": {
+     "action": "/mail/send",
+     "method": "post",
+     "submit_label": "Send",
+     "fields": [
+      {
+       "name": "to",
+       "label": "To",
+       "type": "text",
+       "value": "ap@acme.com, x@gmail.com"
+      }
+     ]
+    }
+   },
+   "expect_facts": {
+    "sensor": "extension",
+    "verb": "submit",
+    "url": "http://127.0.0.1:8765/mail/compose",
+    "host": "127.0.0.1:8765",
+    "path": "/mail/compose",
+    "element_label": "Send",
+    "element_role": "button",
+    "semantic_action": "email_send",
+    "recipient_domain": "(multiple)"
+   },
+   "expect": {
+    "decision": "block",
+    "reason": "p3: Never email anyone outside acme.com",
+    "rule_ids": [
+     "p3"
+    ],
+    "shadow": []
+   }
+  },
+  {
+   "name": "admin delete click",
+   "snapshot": {
+    "url": "http://127.0.0.1:8765/admin/users",
+    "event": "click",
+    "key": null,
+    "element": {
+     "tag": "button",
+     "type": "submit",
+     "role": "button",
+     "label": "Delete user",
+     "text": "Delete user",
+     "name": ""
+    },
+    "form": {
+     "action": "/admin/users/delete",
+     "method": "post",
+     "submit_label": "Delete user",
+     "fields": [
+      {
+       "name": "user",
+       "label": "User",
+       "type": "text",
+       "value": "jane@acme.com"
+      }
+     ]
+    }
+   },
+   "expect_facts": {
+    "sensor": "extension",
+    "verb": "submit",
+    "url": "http://127.0.0.1:8765/admin/users",
+    "host": "127.0.0.1:8765",
+    "path": "/admin/users",
+    "element_label": "Delete user",
+    "element_role": "button",
+    "semantic_action": "delete"
+   },
+   "expect": {
+    "decision": "hold",
+    "reason": "p4: The admin console needs human approval",
+    "rule_ids": [
+     "p4"
+    ],
+    "shadow": [
+     "x1:block:match"
+    ]
+   }
+  },
+  {
+   "name": "search GET form",
+   "snapshot": {
+    "url": "http://127.0.0.1:8765/search",
+    "event": "submit",
+    "key": null,
+    "element": {
+     "tag": "button",
+     "type": "submit",
+     "role": "button",
+     "label": "Search",
+     "text": "Search",
+     "name": ""
+    },
+    "form": {
+     "action": "/search",
+     "method": "get",
+     "submit_label": "Search",
+     "fields": [
+      {
+       "name": "q",
+       "label": "Search",
+       "type": "text",
+       "value": "invoices"
+      }
+     ]
+    }
+   },
+   "expect_facts": {
+    "sensor": "extension",
+    "verb": "submit",
+    "url": "http://127.0.0.1:8765/search",
+    "host": "127.0.0.1:8765",
+    "path": "/search",
+    "element_label": "Search",
+    "element_role": "button",
+    "semantic_action": "navigation"
+   },
+   "expect": {
+    "decision": "allow",
+    "reason": "no policy matched",
+    "rule_ids": [],
+    "shadow": []
+   }
+  },
+  {
+   "name": "unknown POST form",
+   "snapshot": {
+    "url": "http://127.0.0.1:8765/misc",
+    "event": "submit",
+    "key": null,
+    "element": {
+     "tag": "button",
+     "type": "submit",
+     "role": "button",
+     "label": "Confirm",
+     "text": "Confirm",
+     "name": ""
+    },
+    "form": {
+     "action": "/do",
+     "method": "post",
+     "submit_label": "Confirm",
+     "fields": [
+      {
+       "name": "ref_1",
+       "label": "Reference",
+       "type": "text",
+       "value": "A-17"
+      }
+     ]
+    }
+   },
+   "expect_facts": {
+    "sensor": "extension",
+    "verb": "submit",
+    "url": "http://127.0.0.1:8765/misc",
+    "host": "127.0.0.1:8765",
+    "path": "/misc",
+    "element_label": "Confirm",
+    "element_role": "button",
+    "semantic_action": "unknown"
+   },
+   "expect": {
+    "decision": "hold",
+    "reason": "p1: Never submit a payment over $5,000 without human approval (could not determine: amount, semantic_action)",
+    "rule_ids": [
+     "p1",
+     "p2",
+     "p3"
+    ],
+    "shadow": []
+   }
+  },
+  {
+   "name": "enter key in form",
+   "snapshot": {
+    "url": "http://127.0.0.1:8765/invoices/INV-1042",
+    "event": "key",
+    "key": "Enter",
+    "element": {
+     "tag": "input",
+     "type": "text",
+     "role": "textbox",
+     "label": "Amount",
+     "text": "",
+     "name": "amount"
+    },
+    "form": {
+     "action": "/pay",
+     "method": "post",
+     "submit_label": "Pay invoice",
+     "fields": [
+      {
+       "name": "amount",
+       "label": "Amount",
+       "type": "text",
+       "value": "9000"
+      }
+     ]
+    }
+   },
+   "expect_facts": {
+    "sensor": "extension",
+    "verb": "submit",
+    "url": "http://127.0.0.1:8765/invoices/INV-1042",
+    "host": "127.0.0.1:8765",
+    "path": "/invoices/INV-1042",
+    "element_label": "Amount",
+    "element_role": "textbox",
+    "semantic_action": "payment",
+    "amount": 9000
+   },
+   "expect": {
+    "decision": "hold",
+    "reason": "p1: Never submit a payment over $5,000 without human approval",
+    "rule_ids": [
+     "p1"
+    ],
+    "shadow": []
+   }
+  },
+  {
+   "name": "plain link click",
+   "snapshot": {
+    "url": "http://127.0.0.1:8765/",
+    "event": "click",
+    "key": null,
+    "element": {
+     "tag": "a",
+     "type": "",
+     "role": "link",
+     "label": "Invoices",
+     "text": "Invoices",
+     "name": ""
+    },
+    "form": null
+   },
+   "expect_facts": {
+    "sensor": "extension",
+    "verb": "click",
+    "url": "http://127.0.0.1:8765/",
+    "host": "127.0.0.1:8765",
+    "path": "/",
+    "element_label": "Invoices",
+    "element_role": "link",
+    "semantic_action": "none"
+   },
+   "expect": {
+    "decision": "allow",
+    "reason": "no policy matched",
+    "rule_ids": [],
+    "shadow": []
+   }
+  },
+  {
+   "name": "login",
+   "snapshot": {
+    "url": "https://sso.corp.example/login",
+    "event": "submit",
+    "key": null,
+    "element": {
+     "tag": "button",
+     "type": "submit",
+     "role": "button",
+     "label": "Sign in",
+     "text": "Sign in",
+     "name": ""
+    },
+    "form": {
+     "action": "/login",
+     "method": "post",
+     "submit_label": "Sign in",
+     "fields": [
+      {
+       "name": "user",
+       "label": "Username",
+       "type": "text",
+       "value": "agent"
+      },
+      {
+       "name": "pw",
+       "label": "Password",
+       "type": "password",
+       "value": "********"
+      }
+     ]
+    }
+   },
+   "expect_facts": {
+    "sensor": "extension",
+    "verb": "submit",
+    "url": "https://sso.corp.example/login",
+    "host": "sso.corp.example",
+    "path": "/login",
+    "element_label": "Sign in",
+    "element_role": "button",
+    "semantic_action": "login"
+   },
+   "expect": {
+    "decision": "hold",
+    "reason": "x3: hold logins to *.corp.example",
+    "rule_ids": [
+     "x3"
+    ],
+    "shadow": []
+   }
+  },
+  {
+   "name": "no form, no label",
+   "snapshot": {
+    "url": "http://127.0.0.1:8765/x",
+    "event": "click",
+    "key": null,
+    "element": {
+     "tag": "div",
+     "type": "",
+     "role": "div",
+     "label": "",
+     "text": "",
+     "name": ""
+    },
+    "form": null
+   },
+   "expect_facts": {
+    "sensor": "extension",
+    "verb": "click",
+    "url": "http://127.0.0.1:8765/x",
+    "host": "127.0.0.1:8765",
+    "path": "/x",
+    "element_role": "div",
+    "semantic_action": "none"
+   },
+   "expect": {
+    "decision": "hold",
+    "reason": "x3: hold logins to *.corp.example",
+    "rule_ids": [
+     "x3"
+    ],
+    "shadow": []
+   }
+  },
+  {
+   "name": "egress payment, no intent",
+   "facts": {
+    "sensor": "egress",
+    "verb": "request",
+    "semantic_action": "payment",
+    "amount": 200,
+    "ui_intent": "none",
+    "element_label": "api"
+   },
+   "confidence": null,
+   "grant": false,
+   "expect": {
+    "decision": "block",
+    "reason": "p5: Block any payment or bank change that doesn't match an on-screen action",
+    "rule_ids": [
+     "p5"
+    ],
+    "shadow": []
+   }
+  },
+  {
+   "name": "egress payment, matched intent",
+   "facts": {
+    "sensor": "egress",
+    "verb": "request",
+    "semantic_action": "payment",
+    "amount": 200,
+    "ui_intent": "matched",
+    "element_label": "api",
+    "url": "http://127.0.0.1:8765/api/payments"
+   },
+   "confidence": null,
+   "grant": false,
+   "expect": {
+    "decision": "allow",
+    "reason": "no policy matched",
+    "rule_ids": [],
+    "shadow": []
+   }
+  },
+  {
+   "name": "egress payment, mismatch",
+   "facts": {
+    "sensor": "egress",
+    "verb": "request",
+    "semantic_action": "payment",
+    "amount": 7200,
+    "ui_intent": "mismatch",
+    "element_label": "api"
+   },
+   "confidence": null,
+   "grant": true,
+   "expect": {
+    "decision": "block",
+    "reason": "p5: Block any payment or bank change that doesn't match an on-screen action",
+    "rule_ids": [
+     "p5"
+    ],
+    "shadow": []
+   }
+  },
+  {
+   "name": "low confidence semantic",
+   "facts": {
+    "sensor": "harness",
+    "verb": "click",
+    "semantic_action": "payment",
+    "amount": 9000,
+    "element_label": "Go"
+   },
+   "confidence": {
+    "semantic_action": 0.55
+   },
+   "grant": false,
+   "expect": {
+    "decision": "hold",
+    "reason": "p1: Never submit a payment over $5,000 without human approval (could not determine: semantic_action)",
+    "rule_ids": [
+     "p1",
+     "p2",
+     "p3",
+     "p4"
+    ],
+    "shadow": []
+   }
+  },
+  {
+   "name": "high confidence semantic",
+   "facts": {
+    "sensor": "harness",
+    "verb": "click",
+    "semantic_action": "payment",
+    "amount": 9000,
+    "element_label": "Go",
+    "url": "http://127.0.0.1:8765/invoices/INV-9"
+   },
+   "confidence": {
+    "semantic_action": 0.93,
+    "amount": 0.9
+   },
+   "grant": false,
+   "expect": {
+    "decision": "hold",
+    "reason": "p1: Never submit a payment over $5,000 without human approval",
+    "rule_ids": [
+     "p1"
+    ],
+    "shadow": []
+   }
+  },
+  {
+   "name": "granted hold",
+   "facts": {
+    "sensor": "extension",
+    "verb": "submit",
+    "semantic_action": "payment",
+    "amount": 6000,
+    "element_label": "Pay"
+   },
+   "confidence": null,
+   "grant": true,
+   "expect": {
+    "decision": "allow",
+    "reason": "approved by a human",
+    "rule_ids": [],
+    "shadow": []
+   }
+  },
+  {
+   "name": "granted still blocks payee change",
+   "facts": {
+    "sensor": "extension",
+    "verb": "submit",
+    "semantic_action": "payee_change",
+    "element_label": "Save"
+   },
+   "confidence": null,
+   "grant": true,
+   "expect": {
+    "decision": "block",
+    "reason": "p2: Never change a vendor's bank details",
+    "rule_ids": [
+     "p2"
+    ],
+    "shadow": []
+   }
+  },
+  {
+   "name": "harness navigates off-site",
+   "facts": {
+    "sensor": "harness",
+    "verb": "navigate",
+    "host": "evil.example",
+    "semantic_action": "navigation",
+    "element_label": "x"
+   },
+   "confidence": null,
+   "grant": false,
+   "expect": {
+    "decision": "block",
+    "reason": "x2: harness may not navigate off-site",
+    "rule_ids": [
+     "x2"
+    ],
+    "shadow": []
+   }
+  },
+  {
+   "name": "extension navigates off-site (rule scoped to harness)",
+   "facts": {
+    "sensor": "extension",
+    "verb": "navigate",
+    "host": "evil.example",
+    "semantic_action": "navigation",
+    "element_label": "x"
+   },
+   "confidence": null,
+   "grant": false,
+   "expect": {
+    "decision": "allow",
+    "reason": "no policy matched",
+    "rule_ids": [],
+    "shadow": []
+   }
+  },
+  {
+   "name": "amount as string is unknown for gt",
+   "facts": {
+    "sensor": "extension",
+    "verb": "submit",
+    "semantic_action": "payment",
+    "amount": "7200",
+    "element_label": "Pay"
+   },
+   "confidence": null,
+   "grant": false,
+   "expect": {
+    "decision": "hold",
+    "reason": "p1: Never submit a payment over $5,000 without human approval (could not determine: amount)",
+    "rule_ids": [
+     "p1",
+     "p4"
+    ],
+    "shadow": []
+   }
+  },
+  {
+   "name": "literal unknown semantic",
+   "facts": {
+    "sensor": "extension",
+    "verb": "submit",
+    "semantic_action": "unknown",
+    "url": "http://127.0.0.1:8765/admin/x",
+    "element_label": "Go"
+   },
+   "confidence": null,
+   "grant": false,
+   "expect": {
+    "decision": "hold",
+    "reason": "p1: Never submit a payment over $5,000 without human approval (could not determine: amount, semantic_action)",
+    "rule_ids": [
+     "p1",
+     "p2",
+     "p3",
+     "p4"
+    ],
+    "shadow": []
+   }
+  }
+ ]
+}

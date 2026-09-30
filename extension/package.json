@@ -1,0 +1,20 @@
+{
+  "name": "observ-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test test/*.test.ts",
+    "typecheck": "tsc -p ."
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.300",
+    "@types/node": "^22.20.4",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=23.6"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "properties": {
+    "sensor": {
+      "default": "extension",
+      "title": "Sensor",
+      "type": "string"
+    },
+    "session": {
+      "default": "default",
+      "title": "Session",
+      "type": "string"
+    },
+    "snapshot": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Snapshot"
+    },
+    "facts": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Facts"
+    },
+    "image_b64": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Image B64"
+    }
+  },
+  "title": "ActionEnvelope (POST /v1/decide)",
+  "type": "object",
+  "description": "What any sensor sends observd: a DOM/AX snapshot of the action target, or facts it derived itself, plus an optional screenshot crop."
+}

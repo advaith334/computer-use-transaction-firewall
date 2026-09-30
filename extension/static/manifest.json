@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Observ",
+  "version": "0.1.0",
+  "description": "Transaction firewall for computer-use agents: checks every click and submit against your policies before it executes.",
+  "background": { "service_worker": "sw.js" },
+  "permissions": ["storage"],
+  "host_permissions": ["<all_urls>"],
+  "storage": { "managed_schema": "schema.json" },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["main_world.js"],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["snapshot.js", "content.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ]
+}

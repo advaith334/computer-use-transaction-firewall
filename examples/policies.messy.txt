@@ -1,0 +1,5 @@
+# Policies that show the compiler's review steps.
+Don't let the agent pay large invoices without approval
+Be careful with anything sensitive
+Never wire money over $10k
+Never email outside partner.io

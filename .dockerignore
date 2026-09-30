@@ -1,0 +1,9 @@
+.venv
+.git
+.demo
+.observ
+.scratch
+extension/node_modules
+extension/dist
+**/__pycache__
+bundle.json
